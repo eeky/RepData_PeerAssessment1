@@ -1,25 +1,76 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+Reproducible Research: Peer Assessment 1
+================================================
 
+Created by Luis Gama 
+01-15-2017
 
-## Loading and preprocessing the data
+1 - Code for reading in the dataset and/or processing the data
+```{r downloadAndRead, echo=TRUE}
+fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+download.file(fileURL, "./data/ActivityMonData.zip")
 
+unzip("./data/ActivityMonData.zip", exdir = "./data")
 
+deviceData <- read.csv("./data/activity.csv",
+                       header = TRUE,
+                       sep = ",",
+                       na.strings = "NA",
+                       colClasses = c("numeric", "Date", "numeric"))
+```
 
-## What is mean total number of steps taken per day?
+2 - Histogram of the total number of steps taken each day
+```{r sumDailySteps, echo=TRUE, fig.width=14}
+#Obtaining the number of steps per day
+dailyStepsSum <- sapply(split(deviceData$steps, deviceData$date), sum)
 
+hist(dailyStepsSum, main = "Total number of steps taken each day")
 
+```
 
-## What is the average daily activity pattern?
+3 - Mean and median number of steps taken each day
+```{r meanDailySteps, echo=TRUE}
+#Obtaining the mean 
+dailyStepsMean <- sapply(split(deviceData$steps, deviceData$date), mean)
+print(dailyStepsMean)
 
+#Obtaining the median
+dailyStepsMedian <- sapply(split(deviceData$steps, deviceData$date), median)
+print(dailyStepsMedian)
+```
 
+4 - Time series plot of the average number of steps taken
+```{r averageSteps, echo=TRUE}
+plot(na.omit(dailyStepsMean), type = "l")
+```
 
-## Imputing missing values
+5 - The 5-minute interval that, on average, contains the maximum number of steps
+```{r maxStepsInterval, echo=TRUE}
 
+```
 
+6 - Code to describe and show a strategy for imputing missing data
+```{r imputNA, echo=TRUE}
+#6.1 - Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+deviceDataNAs <- is.na(deviceData)
+sum(deviceDataNAs)
 
-## Are there differences in activity patterns between weekdays and weekends?
+#Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+#Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+write.csv(deviceDataNAs, file = "activityNoNA.csv")
+
+#Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+```
+
+7 - Histogram of the total number of steps taken each day after missing values are imputed
+```{r histNoNA, echo=TRUE}
+
+```
+
+8 - Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+```{r compareAvgSteps, echo=TRUE}
+
+```
+
