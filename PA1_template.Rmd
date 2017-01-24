@@ -11,7 +11,7 @@ download.file(fileURL, "./data/ActivityMonData.zip")
 
 unzip("./data/ActivityMonData.zip", exdir = "./data")
 
-deviceData <- read.csv("./data/activity.csv",
+originalDeviceData <- read.csv("./data/activity.csv",
                        header = TRUE,
                        sep = ",",
                        na.strings = "NA",
@@ -20,11 +20,13 @@ deviceData <- read.csv("./data/activity.csv",
 
 2 - Histogram of the total number of steps taken each day
 ```{r sumDailySteps, echo=TRUE, fig.width=14}
+#Ignoring NAs
+deviceData <- na.omit(originalDeviceData)
+
 #Obtaining the number of steps per day
 dailyStepsSum <- sapply(split(deviceData$steps, deviceData$date), sum)
 
 hist(dailyStepsSum, main = "Total number of steps taken each day")
-
 ```
 
 3 - Mean and median number of steps taken each day
@@ -40,37 +42,72 @@ print(dailyStepsMedian)
 
 4 - Time series plot of the average number of steps taken
 ```{r averageSteps, echo=TRUE}
-plot(na.omit(dailyStepsMean), type = "l")
+plot(dailyStepsMean, type = "l")
 ```
 
 5 - The 5-minute interval that, on average, contains the maximum number of steps
 ```{r maxStepsInterval, echo=TRUE}
-
+require(dplyr)
+deviceDataSorted <- arrange(deviceData, desc(steps))
+maxInterval <- deviceDataSorted[1,]
+print(maxInterval)
 ```
 
 6 - Code to describe and show a strategy for imputing missing data
 ```{r imputNA, echo=TRUE}
 #6.1 - Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
-deviceDataNAs <- is.na(deviceData)
+deviceDataNAs <- is.na(originalDeviceData)
 sum(deviceDataNAs)
 
 #Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
 #Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-write.csv(deviceDataNAs, file = "activityNoNA.csv")
+newDeviceData <- originalDeviceData
 
-#Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+agg <- aggregate(steps ~ interval, newDeviceData, mean)
 
+newDeviceData[is.na(newDeviceData)] <- agg$steps
 ```
 
 7 - Histogram of the total number of steps taken each day after missing values are imputed
-```{r histNoNA, echo=TRUE}
 
+```{r histNoNA, echo=TRUE}
+#Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+#Obtaining the number of steps per day
+dailyStepsSum <- sapply(split(newDeviceData$steps, newDeviceData$date), sum)
+
+hist(dailyStepsSum, main = "Total number of steps taken each day")
+
+#Obtaining the mean 
+dailyStepsMean <- sapply(split(newDeviceData$steps, newDeviceData$date), mean)
+print(dailyStepsMean)
+
+#Obtaining the median
+dailyStepsMedian <- sapply(split(newDeviceData$steps, newDeviceData$date), median)
+print(dailyStepsMedian)
 ```
 
-8 - Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+8 - Panel plot comparing the average number of steps taken per 5 minute interval across weekdays and weekends
 ```{r compareAvgSteps, echo=TRUE}
 
-```
+#Changing locale to English, so weekdays are shown as the assignment requires
+Sys.setlocale("LC_TIME", "English")
 
+newDeviceData$day <- ifelse(weekdays(newDeviceData$date) %in% c("Saturday", "Sunday"), "weekend", "weekday")
+
+interval <- aggregate(steps ~ interval + day, newDeviceData, mean)
+
+require(lattice)
+
+xyplot(
+        steps ~ interval | day,
+        interval,
+        type = "l",
+        layout = c(1,2),
+        xlab = "Interval",
+        ylab = "Number of steps"
+)
+
+```
